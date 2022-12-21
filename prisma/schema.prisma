@@ -1,0 +1,62 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model UserInfo {
+  id    String  @id
+  email String
+  name  String?
+  role  Role    @default(USER)
+}
+
+model University {
+  id         String   @id @default(cuid())
+  name       String
+  city       String
+  state      String
+  conference String
+  division   String
+  category   String
+  region     String
+  link       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  coaches    Coach[]
+}
+
+model Coach {
+  id            String        @id @default(cuid())
+  name          String
+  email         String?
+  contactNumber String?
+  category      CoachCategory
+  level         CoachLevel
+  university    University    @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  universityId  String
+
+  @@index([universityId])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum CoachCategory {
+  MEN
+  WOMEN
+}
+
+enum CoachLevel {
+  HEAD
+  ASSISTANT
+}
