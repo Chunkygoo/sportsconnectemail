@@ -1,5 +1,9 @@
 import { atom } from "jotai";
+import type { coachType } from "../components/Email/GenerateEmail";
 
 export const playerNameAtom = atom("");
-export const selectedUniAtom = atom("");
-export const coachesAtom = atom([]);
+export const savedCoachEmailsAtom = atom<string[]>([]);
+export const savedCoachNamesAtom = atom<string[]>([]);
+export const savedCoachesAtom = atom<coachType[]>([]);
+
+export const generateClickedAtom = atom(false);

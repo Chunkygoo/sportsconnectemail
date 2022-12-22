@@ -8,6 +8,7 @@ import { usernameAtom } from "../atoms/appAtoms";
 import SessionAuth from "../components/Auth/SessionAuth";
 import Spinner from "../components/Common/Spinner";
 import GenerateEmail from "../components/Email/GenerateEmail";
+import GeneratedEmail from "../components/Email/GeneratedEmail";
 import { trpc } from "../utils/trpc";
 
 const Home: NextPage = () => {
@@ -62,44 +63,27 @@ const Home: NextPage = () => {
   }
   return (
     <SessionAuth>
+      <h1 className="absolute top-2 left-4">
+        Welcome back <span className="ml-2 text-blue-500">{username}</span>
+      </h1>
       <button
         type="button"
         onClick={logOutHelper}
-        className="absolute top-2 right-4"
+        className="absolute top-2 right-4 rounded-lg bg-blue-600 px-2 py-1.5 text-sm font-medium
+        text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300"
       >
         Log out
       </button>
       <div className="flex h-screen">
-        <h1 className="absolute top-2 left-4">
-          Welcome back <span className="ml-2 text-blue-500">{username}</span>
-        </h1>
-        {/* <div className="m-auto max-w-[80%]">
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Enim neque
-            tenetur id nihil illo, cumque sequi corporis perferendis rem fuga
-            delectus impedit sapiente nam optio earum minus aut culpa similique.
-          </p>
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Enim neque
-            tenetur id nihil illo, cumque sequi corporis perferendis rem fuga
-            delectus impedit sapiente nam optio earum minus aut culpa similique.
-          </p>
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Enim neque
-            tenetur id nihil illo, cumque sequi corporis perferendis rem fuga
-            delectus impedit sapiente nam optio earum minus aut culpa similique.
-          </p>
-        </div> */}
-        {/* <div className="relative hidden bg-cover lg:block lg:w-[60%] xl:w-2/3">
-              test
-            </div> */}
-        <div className="mx-auto flex w-[60%] items-center px-3">
-          <GenerateEmail />
+        <div className="flex w-[50%] justify-center">
+          <div className="m-auto w-[80%]">
+            <GenerateEmail />
+          </div>
         </div>
         <span className="border-r-2 border-black"></span>
-        <div className="mx-auto flex w-[40%] items-center px-3">
-          <div className="mx-auto text-center">
-            <h2 className="text-center">Generated email</h2>
+        <div className="flex w-[50%] justify-center">
+          <div className="m-auto max-h-[80%] w-[80%]">
+            <GeneratedEmail />
           </div>
         </div>
       </div>
