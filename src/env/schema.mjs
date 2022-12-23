@@ -15,7 +15,6 @@ export const serverSchema = z.object({
   APP_URL: z.string(),
   SUPERTOKENS_CONNECTION_URI: z.string(),
   SUPERTOKENS_API_KEY: z.string(),
-  SUPERTOKENS_DASHBOARD_API_KEY: z.string(),
   SUPERTOKENS_GOOGLE_CLIENT_ID: z.string(),
   SUPERTOKENS_GOOGLE_CLIENT_SECRET: z.string(),
 });

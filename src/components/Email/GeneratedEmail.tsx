@@ -1,15 +1,29 @@
 import { useAtom } from "jotai";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { generateClickedAtom, savedCoachesAtom } from "../../atoms/emailAtoms";
+import { playerNameAtom, savedCoachesAtom } from "../../atoms/emailAtoms";
 import { emailTemplate } from "../../data/emailTemplate";
+import { trpc } from "../../utils/trpc";
 
 export default function GeneratedEmail() {
-  const [savedCoaches] = useAtom(savedCoachesAtom);
-  const [generateClicked] = useAtom(generateClickedAtom);
+  const [playerName] = useAtom(playerNameAtom);
+  const [savedCoaches, setSavedCoaches] = useAtom(savedCoachesAtom);
   const [emailContent, setEmailContent] = useState(emailTemplate);
 
-  if (!generateClicked) {
+  const { mutateAsync: sendEmail } = trpc.email.sendEmail.useMutation({
+    onSuccess() {
+      toast.success("Emails sent ✅", {
+        position: toast.POSITION.BOTTOM_RIGHT,
+      });
+    },
+    onError() {
+      toast.error("An error occured while sending your email", {
+        position: toast.POSITION.BOTTOM_RIGHT,
+      });
+    },
+  });
+
+  if (savedCoaches.length === 0) {
     return (
       <div>
         You need to select some coaches first to see the generated email.
@@ -19,7 +33,7 @@ export default function GeneratedEmail() {
 
   return (
     <div>
-      <div className=" text-center">
+      <div className="text-center">
         This email will be sent to {savedCoaches.length} coach
         {savedCoaches.length > 1 && "es "}
         {savedCoaches && savedCoaches.length > 0 && (
@@ -62,7 +76,6 @@ export default function GeneratedEmail() {
         value={emailContent}
         onChange={(e) => {
           const newEmailContent = e.target.value;
-          console.log(newEmailContent);
           if (
             (newEmailContent.match(/COACH_NAME/g) || []).length === 0 ||
             (newEmailContent.match(/UNIVERSITY_NAME/g) || []).length === 0 ||
@@ -76,7 +89,7 @@ export default function GeneratedEmail() {
             );
             return;
           } else if (
-            (newEmailContent.match(/COACH_NAME]/g) || []).length > 1 ||
+            (newEmailContent.match(/COACH_NAME/g) || []).length > 1 ||
             (newEmailContent.match(/UNIVERSITY_NAME/g) || []).length > 1 ||
             (newEmailContent.match(/PLAYER_NAME/g) || []).length > 1
           ) {
@@ -93,13 +106,19 @@ export default function GeneratedEmail() {
       />
       <button
         type="button"
-        onClick={() => {
-          console.log("send");
+        onClick={async () => {
+          await sendEmail({
+            playerName: playerName,
+            coaches: savedCoaches,
+            emailTemplate: emailContent,
+          });
+          setSavedCoaches([]);
         }}
+        disabled={savedCoaches.length === 0 || playerName === ""}
         className="rounded-lg bg-blue-600 px-2 py-1.5 text-sm font-medium text-white
         hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:bg-blue-300"
       >
-        Send
+        Send Email
       </button>
     </div>
   );

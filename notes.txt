@@ -1,0 +1,1 @@
+Send email to https://www.mail-tester.com/ to check score

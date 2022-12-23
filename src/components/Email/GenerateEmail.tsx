@@ -1,11 +1,7 @@
 import { useAtom } from "jotai";
 import { useState } from "react";
 import { DebounceInput } from "react-debounce-input";
-import {
-  generateClickedAtom,
-  playerNameAtom,
-  savedCoachesAtom,
-} from "../../atoms/emailAtoms";
+import { playerNameAtom, savedCoachesAtom } from "../../atoms/emailAtoms";
 import { trpc } from "../../utils/trpc";
 
 export type universityType = {
@@ -28,17 +24,20 @@ export type universityNoCoachType = {
 export type coachType = {
   id: string;
   name: string;
-  email: string | null;
+  email: string;
   contactNumber: string | null;
   category: string;
   level: string;
   university: universityNoCoachType;
 };
 
+type coachTypeEmailNullable = Omit<coachType, "email"> & {
+  email: string | null;
+};
+
 export default function GenerateEmail() {
   const [playerName, setPlayerName] = useAtom(playerNameAtom);
   const [savedCoaches, setSavedCoaches] = useAtom(savedCoachesAtom);
-  const [_, setGenerateClicked] = useAtom(generateClickedAtom);
   const [searchedUni, setSearchedUni] = useState("");
   const [selectedUniId, setSelectedUniId] = useState("");
 
@@ -72,10 +71,10 @@ export default function GenerateEmail() {
       (coach) => coach.email === emailToRemove
     );
     setSavedCoaches((prev) => {
-      const newSavedCoachEmails = [...prev];
+      const newSavedCoaches = [...prev];
       if (emailToRemoveIndex !== -1)
-        newSavedCoachEmails.splice(emailToRemoveIndex, 1);
-      return newSavedCoachEmails;
+        newSavedCoaches.splice(emailToRemoveIndex, 1);
+      return newSavedCoaches;
     });
   };
 
@@ -87,9 +86,23 @@ export default function GenerateEmail() {
       );
   };
 
+  const getCoachesWithEmail = (coaches: coachTypeEmailNullable[]) => {
+    const coachesWithNonNullEmail: coachType[] = [];
+    for (let i = 0; i < coaches.length; i++) {
+      const coach = coaches[i];
+      if (!coach || !coach.email || coach.email === "") continue;
+      coachesWithNonNullEmail.push({
+        ...coach,
+        email: coach.email,
+      });
+    }
+    return coachesWithNonNullEmail;
+  };
+
   return (
     <div className="flex flex-col space-y-4">
-      <h2>Generate Email</h2>
+      <h2 className="text-center">Generate Email</h2>
+      <div className="mt-4 mb-4 flex-grow border-t border-gray-400"></div>
       <label>
         Player name:
         <input
@@ -100,7 +113,10 @@ export default function GenerateEmail() {
         />
       </label>
       <h2>
-        Selected University: {selectedUni?.name ? selectedUni?.name : "none"}
+        Selected University:{" "}
+        {selectedUni?.name
+          ? `${selectedUni?.name} (${selectedUni?.category})`
+          : "none"}
         <button
           type="button"
           className="mr-2 mb-2 ml-2 rounded-lg bg-blue-600 px-2 py-1.5 text-sm font-medium
@@ -126,18 +142,23 @@ export default function GenerateEmail() {
       </label>
       <div>
         {unis && unis.length > 0 && (
-          <table className="border-2 border-gray-500">
+          <table className="table-fixed border-2 border-gray-500">
             <thead>
               <tr>
                 {uniHeaders.map((header, index) => (
-                  <th key={index}>{header}</th>
+                  <th
+                    className="border-r-2 border-b-2 border-gray-500"
+                    key={index}
+                  >
+                    {header}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {unis.map((uni) => (
                 <tr key={uni.id}>
-                  <td>
+                  <td className="w-[5%] border-r-2 border-gray-500 p-1 text-center">
                     <input
                       aria-label="checkbox"
                       type="checkbox"
@@ -151,10 +172,18 @@ export default function GenerateEmail() {
                       checked={uni.id === selectedUniId}
                     ></input>
                   </td>
-                  <td>{uni.name}</td>
-                  <td>{uni.city}</td>
-                  <td>{uni.state}</td>
-                  <td>{uni.category}</td>
+                  <td className="w-[40%] border-r-2 border-gray-500 p-1 text-center">
+                    {uni.name}
+                  </td>
+                  <td className="w-[20%] border-r-2 border-gray-500 p-1 text-center">
+                    {uni.city}
+                  </td>
+                  <td className="w-[15%] border-r-2 border-gray-500 p-1 text-center">
+                    {uni.state}
+                  </td>
+                  <td className="w-[15%] border-r-2 border-gray-500 p-1 text-center">
+                    {uni.category}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -163,59 +192,79 @@ export default function GenerateEmail() {
       </div>
       <div>
         {selectedUni?.coaches && selectedUni?.coaches.length > 0 && (
-          <table className="border-2 border-gray-500">
+          <table className="table-fixed border-2 border-gray-500">
             <thead>
               <tr>
                 {coachesHeaders.map((header, index) => (
-                  <th key={index}>{header}</th>
+                  <th
+                    className="border-r-2 border-b-2 border-gray-500"
+                    key={index}
+                  >
+                    {header}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {selectedUni?.coaches.map((coach: coachType) => (
-                <tr key={coach.id}>
-                  <td>
-                    <div
-                      className="m-1 rounded-lg bg-blue-600 px-2 py-1.5 text-sm font-medium
-                      text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300"
-                      onClick={() => {
-                        setSavedCoaches((prev) => {
-                          if (prev.map((coach) => coach.id).includes(coach.id))
-                            return prev;
-                          if (!coach.email || coach.email === "") {
-                            alert("This coach has no email. Cannot be added");
-                            return prev;
-                          }
-                          const newSavedCoaches = [...prev, coach];
-                          return newSavedCoaches;
-                        });
-                      }}
-                    >
-                      Add
-                    </div>
-                  </td>
-                  <td>{coach.name}</td>
-                  <td>{coach.email}</td>
-                  <td>{coach.contactNumber}</td>
-                  <td>{coach.category}</td>
-                  <td>{coach.level}</td>
-                </tr>
-              ))}
+              {getCoachesWithEmail(selectedUni?.coaches).map(
+                (coach: coachType) => {
+                  coach.email;
+                  return (
+                    <tr key={coach.id}>
+                      <td className="w-[5%] border-r-2 border-gray-500 p-1">
+                        <div
+                          className="m-1 rounded-lg bg-blue-600 px-2 py-1.5 text-sm font-medium
+                      text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 "
+                          onClick={() => {
+                            setSavedCoaches((prev) => {
+                              if (
+                                prev.map((coach) => coach.id).includes(coach.id)
+                              )
+                                return prev;
+                              if (!validateEmail(coach.email)) {
+                                alert(
+                                  `${coach.name} has an invalid email: ${coach.email}`
+                                );
+                                return prev;
+                              }
+                              const newSavedCoaches = [...prev, coach];
+                              return newSavedCoaches;
+                            });
+                          }}
+                        >
+                          Add
+                        </div>
+                      </td>
+                      <td className="w-[25%] border-r-2 border-gray-500 p-1 text-center">
+                        {coach.name}
+                      </td>
+                      <td className="w-[25%] border-r-2 border-gray-500 p-1 text-center">
+                        {coach.email}
+                      </td>
+                      <td className="border-r-2 border-gray-500 p-1 text-center">
+                        {coach.contactNumber}
+                      </td>
+                      <td className=" border-r-2 border-gray-500 p-1 text-center">
+                        {coach.category}
+                      </td>
+                      <td className="border-r-2 border-gray-500 p-1 text-center">
+                        {coach.level}
+                      </td>
+                    </tr>
+                  );
+                }
+              )}
             </tbody>
           </table>
         )}
       </div>
       <div>
-        Saved emails:{" "}
+        Send to:{" "}
         {savedCoaches && savedCoaches.length > 0 ? (
           <span>
             {savedCoaches
               .map((savedCoach) => savedCoach.email)
               .map((coachEmail, i, self) => {
-                if (!coachEmail || coachEmail === "") {
-                  alert("Should never get here.");
-                  throw new Error("Should never get here.");
-                }
                 if (i + 1 === self.length) {
                   return (
                     <span key={i}>
@@ -256,23 +305,6 @@ export default function GenerateEmail() {
           "None"
         )}
       </div>
-      <button
-        type="button"
-        onClick={() => {
-          savedCoaches.map((coach) => {
-            if (coach.email && !validateEmail(coach.email)) {
-              alert(`${coach.name} has an invalid email: ${coach.email}`);
-              return;
-            }
-          });
-          setGenerateClicked(true);
-        }}
-        disabled={savedCoaches.length === 0}
-        className="rounded-lg bg-blue-600 px-2 py-1.5 text-sm font-medium text-white
-        hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:bg-blue-300"
-      >
-        Generate
-      </button>
     </div>
   );
 }

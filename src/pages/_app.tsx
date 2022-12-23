@@ -18,7 +18,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <Provider>
       <SuperTokensWrapper>
-        <Component {...pageProps} />;
+        <Component {...pageProps} />
         <ToastContainer />
       </SuperTokensWrapper>
     </Provider>
