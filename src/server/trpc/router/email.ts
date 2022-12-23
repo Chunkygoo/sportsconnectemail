@@ -83,8 +83,7 @@ export const emailRouter = router({
       const params = {
         Source: env.MAIL_FROM,
         Destination: {
-          // ToAddresses: [coach.email]
-          ToAddresses: ["sportsconnecthq@gmail.com", "calvintai0402@gmail.com"],
+          ToAddresses: [coach.email],
         },
         Message: {
           Body: {
