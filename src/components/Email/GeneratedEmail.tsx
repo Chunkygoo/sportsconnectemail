@@ -113,12 +113,36 @@ export default function GeneratedEmail() {
             emailTemplate: emailContent,
           });
           setSavedCoaches([]);
+
+          const element = document.createElement("a");
+          const file = new Blob(
+            savedCoaches.map((coach) => `${coach.email}\n`),
+            { type: "text/plain" }
+          );
+          element.href = URL.createObjectURL(file);
+
+          const currentdate = new Date();
+          const datetime =
+            "at date " +
+            currentdate.getDate() +
+            "_" +
+            (currentdate.getMonth() + 1) +
+            "_" +
+            currentdate.getFullYear() +
+            ", time " +
+            currentdate.getHours() +
+            "_" +
+            currentdate.getMinutes();
+
+          element.download = `coachEmails for ${playerName} (${datetime}).txt`;
+          document.body.appendChild(element); // Required for this to work in FireFox
+          element.click();
         }}
         disabled={savedCoaches.length === 0 || playerName === ""}
         className="rounded-lg bg-blue-600 px-2 py-1.5 text-sm font-medium text-white
         hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:bg-blue-300"
       >
-        Send Email
+        Send and download emails
       </button>
     </div>
   );
