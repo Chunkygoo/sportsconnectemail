@@ -217,7 +217,6 @@ export default function GenerateEmail() {
                           className="m-1 rounded-lg bg-blue-600 px-2 py-1.5 text-sm font-medium text-white
                       hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:bg-blue-300 "
                           onClick={() => {
-                            if (savedCoaches.length >= 30) return;
                             setSavedCoaches((prev) => {
                               if (
                                 prev.map((coach) => coach.id).includes(coach.id)
@@ -233,7 +232,6 @@ export default function GenerateEmail() {
                               return newSavedCoaches;
                             });
                           }}
-                          disabled={savedCoaches.length >= 30}
                         >
                           Add
                         </button>

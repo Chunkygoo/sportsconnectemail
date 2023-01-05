@@ -14,22 +14,20 @@ const sesConfig = {
 
 export const emailSchema = z.object({
   playerName: z.string(),
-  coaches: z.array(
-    z.object({
+  coach: z.object({
+    name: z.string(),
+    email: z.string(),
+    contactNumber: z.string().nullable(),
+    category: z.string(),
+    level: z.string(),
+    university: z.object({
+      id: z.string(),
       name: z.string(),
-      email: z.string(),
-      contactNumber: z.string().nullable(),
+      city: z.string(),
+      state: z.string(),
       category: z.string(),
-      level: z.string(),
-      university: z.object({
-        id: z.string(),
-        name: z.string(),
-        city: z.string(),
-        state: z.string(),
-        category: z.string(),
-      }),
-    })
-  ),
+    }),
+  }),
   emailTemplate: z.string(),
 });
 
@@ -63,71 +61,68 @@ export const emailRouter = router({
         .promise();
     };
 
-    const { playerName, coaches, emailTemplate } = input;
-    for (let i = 0; i < coaches.length; i++) {
-      const coach = coaches[i];
-      if (!coach) return;
-      const BODY_HTML = emailTemplate
-        .replace("PLAYER_NAME", playerName)
-        .replace("COACH_NAME", coach?.name || "coach")
-        .replace("UNIVERSITY_NAME", coach?.university.name || "your university")
-        .split("\n")
-        .join("<br />");
-      const BODY_TEXT = emailTemplate
-        .replace("PLAYER_NAME", playerName)
-        .replace("COACH_NAME", coach?.name || "coach")
-        .replace("UNIVERSITY_NAME", coach?.university.name || "your university")
-        .split("\n")
-        .join("<br />");
-      const SUBJECT = `Tennis Recruit for ${playerName}`;
-      const params = {
-        Source: env.MAIL_FROM,
-        Destination: {
-          ToAddresses: [coach.email],
-        },
-        Message: {
-          Body: {
-            Html: {
-              Charset: "UTF-8",
-              Data: BODY_HTML,
-            },
-            Text: {
-              Charset: "UTF-8",
-              Data: BODY_TEXT,
-            },
-          },
-          Subject: {
+    const { playerName, coach, emailTemplate } = input;
+    const BODY_HTML = emailTemplate
+      .replace("PLAYER_NAME", playerName)
+      .replace("COACH_NAME", coach?.name || "coach")
+      .replace("UNIVERSITY_NAME", coach?.university.name || "your university")
+      .split("\n")
+      .join("<br />");
+    const BODY_TEXT = emailTemplate
+      .replace("PLAYER_NAME", playerName)
+      .replace("COACH_NAME", coach?.name || "coach")
+      .replace("UNIVERSITY_NAME", coach?.university.name || "your university")
+      .split("\n")
+      .join("<br />");
+    const SUBJECT = `Tennis Recruit for ${playerName}`;
+    const params = {
+      Source: env.MAIL_FROM,
+      ReplyToAddresses: ["sportsconnecthq@gmail.com"],
+      Destination: {
+        ToAddresses: [coach.email],
+      },
+      Message: {
+        Body: {
+          Html: {
             Charset: "UTF-8",
-            Data: SUBJECT,
+            Data: BODY_HTML,
+          },
+          Text: {
+            Charset: "UTF-8",
+            Data: BODY_TEXT,
           },
         },
-      };
-      try {
-        ses
-          .sendEmail(params)
-          .promise()
-          .then((data) => {
-            if (data.MessageId) {
-              sendConfirmationEmail(
-                `Email sent to: ${coach.email}`,
-                `This is a confirmation that your email has been sent to ${coach.email} (${coach.name})`
-              );
-            }
-          })
-          .catch((e) => {
+        Subject: {
+          Charset: "UTF-8",
+          Data: SUBJECT,
+        },
+      },
+    };
+    try {
+      ses
+        .sendEmail(params)
+        .promise()
+        .then((data) => {
+          if (data.MessageId) {
             sendConfirmationEmail(
-              `ERROR: email NOT sent to: ${coach.email}`,
-              `This is a confirmation that your email has failed to be sent to ${coach.email} (${coach.name})`
+              `Email sent to: ${coach.email}`,
+              `This is a confirmation that your email has been sent to ${coach.email} (${coach.name})`
             );
-            throw new Error(e);
-          });
-      } catch (error) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: (error as Error).message,
-          cause: error,
+          }
+        })
+        .catch((e) => {
+          sendConfirmationEmail(
+            `ERROR: email NOT sent to: ${coach.email}`,
+            `This is a confirmation that your email has failed to be sent to ${coach.email} (${coach.name})`
+          );
+          throw new Error(e);
         });
-      }
+    } catch (error) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: (error as Error).message,
+        cause: error,
+      });
     }
   }),
 });
